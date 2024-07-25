@@ -12,20 +12,13 @@ jobs:
 
       - name: Install Fern
         run: npm install -g fern-api
-        
-      - name: Build footer
-        run: |
-          cd footer
-          yarn
-          yarn build
-          cd ../
 
       - name: Generate preview URL
         id: generate-docs
         env:
           FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
         run: |
-          OUTPUT=$(fern generate --docs --preview 2>&1) || true
+          OUTPUT=$(fern generate --docs --preview --log-level debug 2>&1) || true
           echo "$OUTPUT"
           URL=$(echo "$OUTPUT" | grep -oP 'Published docs to \K.*(?= \()')
           echo "Preview URL: $URL"

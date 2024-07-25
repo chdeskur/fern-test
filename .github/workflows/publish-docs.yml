@@ -15,13 +15,6 @@ jobs:
 
       - name: Install Fern
         run: npm install -g fern-api
-        
-      - name: Build footer
-        run: |
-          cd footer
-          yarn
-          yarn build
-          cd ../
 
       - name: Publish Docs
         env:
