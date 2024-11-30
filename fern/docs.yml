@@ -2,6 +2,8 @@ instances:
   - url: https://chdeskur.docs.buildwithfern.com
 title: chdeskur | Documentation
 navigation:
+  - page: Test
+    path: test-page.mdx
   - api: API Reference
 colors:
   accentPrimary: '#ffffff'

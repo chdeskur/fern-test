@@ -1,37 +1,62 @@
-name: Preview Docs 
+name: preview-docs
 
-on: pull_request
+on:
+  pull_request_target:
+    branches:
+      - main
+    paths: 
+      - 'fern/**'
+  workflow_dispatch:
+    inputs:
+      prNumber:
+        description: "Pull Request Number"
+        required: true
+        default: ""
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      pull-requests: write  # Only for commenting
+      contents: read       # For checking out code
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Fern
-        run: npm install -g fern-api
-        
-      - name: Build footer
-        run: |
-          cd footer
-          yarn
-          yarn build
-          cd ../
+      - name: Install
+        uses: ./.github/actions/install
 
       - name: Generate preview URL
         id: generate-docs
         env:
           FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
         run: |
-          OUTPUT=$(fern generate --docs --preview 2>&1) || true
+          pnpm --filter @fern-api/cli dist:cli:prod
+          cli_path="$(pwd)/packages/cli/cli/dist/prod/cli.cjs" 
+          OUTPUT=$(node $cli_path generate --docs --preview 2>&1) || true
           echo "$OUTPUT"
           URL=$(echo "$OUTPUT" | grep -oP 'Published docs to \K.*(?= \()')
           echo "Preview URL: $URL"
           echo "🌿 Preview your docs: $URL" > preview_url.txt
 
-      - name: Comment URL in PR
-        uses: thollander/actions-comment-pull-request@v2.4.3
-        with:
-          filePath: preview_url.txt
+      - name: Comment or Update URL in PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMENT_TAG="<!-- docs-preview-link -->"
+          PREVIEW_URL=$(cat preview_url.txt)
+
+          # Get existing comments
+          EXISTING_COMMENT=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            --jq ".[] | select(.body | contains(\"${COMMENT_TAG}\")) | .id")
+
+          if [ -z "$EXISTING_COMMENT" ]; then
+            # No existing comment, create one
+            gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+              -f body="${COMMENT_TAG}🌿 Preview your docs: $PREVIEW_URL"
+          else
+            # Update existing comment
+            gh api repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT \
+              -X PATCH \
+              -f body="${COMMENT_TAG}🌿 Preview your docs: $PREVIEW_URL"
+          fi
