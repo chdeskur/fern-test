@@ -35,10 +35,10 @@ jobs:
           if [ -z "$EXISTING_COMMENT" ]; then
             # No existing comment, create one
             gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-              -d '{"body":"🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"}'
+              -f "body"="🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"
           else
             # Update existing comment
             gh api repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT \
               -X PATCH \
-              -d '{"body":"🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"}'
+              -f "body"="🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"
           fi
