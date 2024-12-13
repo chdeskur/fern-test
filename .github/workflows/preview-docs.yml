@@ -1,28 +1,15 @@
-name: preview-docs
+name: Preview Docs
 
-on:
-  pull_request_target:
-    branches:
-      - main
-    paths: 
-      - 'fern/**'
-  workflow_dispatch:
-    inputs:
-      prNumber:
-        description: "Pull Request Number"
-        required: true
-        default: ""
+on: pull_request
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write  # Only for commenting
-      contents: read       # For checking out code
+    permissions: write-all
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Install Fern
         run: npm install -g fern-api
 
@@ -41,20 +28,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          COMMENT_TAG="<!-- docs-preview-link -->"
           PREVIEW_URL=$(cat preview_url.txt)
-
           # Get existing comments
           EXISTING_COMMENT=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            --jq ".[] | select(.body | contains(\"${COMMENT_TAG}\")) | .id")
-
+            --jq ".[] | select(.body | contains(\"Preview your docs\")) | .id")
           if [ -z "$EXISTING_COMMENT" ]; then
             # No existing comment, create one
             gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-              -f body="${COMMENT_TAG}🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"
+              -d '{"body":"🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"}'
           else
             # Update existing comment
             gh api repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT \
               -X PATCH \
-              -f body="${COMMENT_TAG}🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"
+              -d '{"body":"🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"}'
           fi
