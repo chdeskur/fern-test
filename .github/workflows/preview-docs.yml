@@ -23,9 +23,9 @@ jobs:
         id: generate-docs
         env:
           FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
-          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
-          AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
+          # AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          # AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          # POSTHOG_API_KEY: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
         run: |
           pnpm --filter @fern-api/cli dist:cli:prod
           cli_path="$(pwd)/packages/cli/cli/dist/prod/cli.cjs" 
