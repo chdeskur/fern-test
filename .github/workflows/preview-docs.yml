@@ -10,15 +10,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Checkout PR
+        if: github.event_name == 'pull_request_target'
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-${{ github.event.pull_request.number }}
+          git checkout pr-${{ github.event.pull_request.number }}
+
       - name: Install Fern
         run: npm install -g fern-api
-
+        
       - name: Generate preview URL
         id: generate-docs
         env:
           FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
         run: |
-          OUTPUT=$(fern generate --docs --preview 2>&1) || true
+          pnpm --filter @fern-api/cli dist:cli:prod
+          cli_path="$(pwd)/packages/cli/cli/dist/prod/cli.cjs" 
+          OUTPUT=$(node $cli_path generate --docs --preview --instance fern.docs.buildwithfern.com/learn 2>&1) || true
           echo "$OUTPUT"
           URL=$(echo "$OUTPUT" | grep -oP 'Published docs to \K.*(?= \()')
           echo "Preview URL: $URL"
@@ -42,3 +53,4 @@ jobs:
               -X PATCH \
               -f "body"="🌿 Preview your docs: [$PREVIEW_URL]($PREVIEW_URL)"
           fi
+
