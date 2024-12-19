@@ -27,7 +27,7 @@ jobs:
           # AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
           # POSTHOG_API_KEY: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
         run: |
-          pnpm --filter @fern-api/cli dist:cli:prod
+          npm --filter @fern-api/cli dist:cli:prod
           cli_path="$(pwd)/packages/cli/cli/dist/prod/cli.cjs" 
           OUTPUT=$(node $cli_path generate --docs --preview --instance fern.docs.buildwithfern.com/learn 2>&1) || true
           echo "$OUTPUT"
