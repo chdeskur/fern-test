@@ -1,4 +1,7 @@
-default-group: local
+api:
+  specs:
+    - openapi: ./openapi.json
+      origin: https://api.vapi.ai/api-json
 groups:
   local:
     generators:
